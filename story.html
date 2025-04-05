@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Story</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to right, #EBF8FF, #F3E8FF, #FFF1F2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+            color: #4A5568;
+        }
+
+        .story-container {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            max-width: 28rem;
+            width: 100%;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 1.5rem;
+            line-height: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #2D3748;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 1.5rem;
+        }
+
+        .story-text-display {
+            color: #4A5568;
+            margin-bottom: 1.5rem;
+            min-height: 6em;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .name-label {
+            display: block;
+            color: #4A5568;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .name-input {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            appearance: none;
+            border: 1px solid #E2E8F0;
+            border-radius: 0.375rem;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            color: #4A5568;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+        .name-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+            border-color: #63B3ED;
+        }
+
+        .button {
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: none;
+            cursor: pointer;
+            color: white;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            max-width: 20rem;
+            width: auto;
+        }
+        @media (min-width: 640px) {
+             .button.choice-button {
+                 width: auto;
+             }
+        }
+         .button:hover {
+            transform: translateY(-2px);
+        }
+         .button:active {
+            transform: translateY(0px);
+        }
+
+        .button.start-button {
+            background-color: #48BB78;
+        }
+        .button.start-button:hover {
+             background-color: #38A169;
+        }
+
+        .button.restart-button {
+            background-color: #4299E1;
+        }
+         .button.restart-button:hover {
+             background-color: #3182CE;
+        }
+
+        .button.choice-button {
+            background-color: #805AD5;
+            width: 100%;
+        }
+        .button.choice-button:hover {
+            background-color: #6B46C1;
+        }
+
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .end-message {
+             color: #4A5568;
+             font-weight: 600;
+             font-size: 1.125rem;
+             margin-top: 1.5rem;
+             margin-bottom: 1rem;
+        }
+
+        .hidden-fade {
+            opacity: 0;
+            visibility: hidden;
+            height: 0;
+            overflow: hidden;
+            transition: opacity 0.5s ease, visibility 0s linear 0.5s, height 0.5s ease, margin 0.5s ease, padding 0.5s ease;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+        .visible-fade {
+            opacity: 1;
+            visibility: visible;
+            height: auto;
+            transition: opacity 0.5s ease 0.5s, visibility 0s linear 0.5s, height 0.5s ease 0.5s, margin 0.5s ease 0.5s, padding 0.5s ease 0.5s;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="story-container">
+        <h1 id="main-title" class="title">Welcome, Adventurer!</h1>
+        <p id="subtitle" class="subtitle">Enter your name and start your unique journey.</p>
+
+        <div id="name-section" class="visible-fade">
+             <label for="name-input" class="name-label">Character Name:</label>
+             <input type="text" id="name-input" placeholder="E.g., Alex" class="name-input">
+             <button id="start-button" class="button start-button">
+                 Start Adventure
+             </button>
+        </div>
+
+        <div id="story-section" class="hidden-fade">
+            <p id="story-text" class="story-text-display">
+            </p>
+            <div id="choices" class="choices-container">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const storyTextElement = document.getElementById('story-text');
+        const choicesElement = document.getElementById('choices');
+        const nameInput = document.getElementById('name-input');
+        const startButton = document.getElementById('start-button');
+        const nameSection = document.getElementById('name-section');
+        const storySection = document.getElementById('story-section');
+        const mainTitle = document.getElementById('main-title');
+        const subtitle = document.getElementById('subtitle');
+
+        let currentScene = 'start';
+        let characterName = "Adventurer";
+
+        const story = {
+            start: {
+                getText: () => `Brave ${characterName}, you stand at a crossroads. A shadowy forest path lies to your left, and a sunny meadow path stretches to your right.`,
+                choices: [ { text: "Enter the forest", nextScene: "forest_entry" }, { text: "Walk into the meadow", nextScene: "meadow_entry" } ]
+            },
+            forest_entry: {
+                getText: () => `The forest is dark and quiet, ${characterName}. You hear a faint rustling in the bushes nearby. Do you investigate or keep walking?`,
+                choices: [ { text: "Investigate the rustling", nextScene: "forest_investigate" }, { text: "Keep walking carefully", nextScene: "forest_walk_deep" } ]
+            },
+            forest_investigate: {
+                getText: () => `You cautiously approach the bushes and find a small, friendly fox! It looks up at you curiously, ${characterName}. What do you do?`,
+                choices: [ { text: "Try to gently pet it", nextScene: "forest_pet_fox" }, { text: "Slowly back away", nextScene: "forest_back_away" } ]
+            },
+            forest_pet_fox: {
+                 getText: () => `The fox seems wary but allows a single, gentle stroke of its soft fur before darting silently into the undergrowth. You feel a brief connection to the wild heart of the forest.`,
+                 choices: []
+            },
+            forest_back_away: {
+                getText: () => `Respecting its space, you slowly back away. The fox watches you for a moment, then vanishes. You continue your journey deeper into the woods.`,
+                choices: [ { text: "Follow the main path", nextScene: "forest_walk_deep" }, { text: "Look for berries", nextScene: "forest_berries" } ]
+            },
+             forest_walk_deep: {
+                getText: () => `You continue along the winding path, deeper into the quiet woods. Sunlight filters weakly through the dense canopy above. Ahead, the path splits again. Left looks darker, right seems slightly clearer.`,
+                choices: [ { text: "Take the darker left path", nextScene: "forest_dark_path" }, { text: "Take the clearer right path", nextScene: "forest_clear_path" } ]
+            },
+            forest_berries: {
+                getText: () => `You search around and find some plump, red berries. They look delicious, ${characterName}, but are they safe?`,
+                choices: [ { text: "Eat the berries", nextScene: "forest_eat_berries" }, { text: "Leave them be", nextScene: "forest_leave_berries" } ]
+            },
+            forest_dark_path: {
+                 getText: () => `The left path grows increasingly dark. You hear an owl hoot nearby. Suddenly, the path opens into a hidden clearing with ancient ruins. A sense of mystery hangs in the air.`,
+                 choices: []
+            },
+            forest_clear_path: {
+                 getText: () => `The right path leads you gently uphill. Soon, you emerge from the trees onto a ridge overlooking a beautiful, sunlit valley. A rewarding view for ${characterName}!`,
+                 choices: []
+            },
+             forest_eat_berries: {
+                 getText: () => `Risky move, ${characterName}! Luckily, these berries are sweet and refreshing. You feel energized for the rest of your journey. You find your way out of the forest shortly after.`,
+                 choices: []
+            },
+             forest_leave_berries: {
+                 getText: () => `Probably wise, ${characterName}. You leave the berries and continue on, eventually finding a well-trodden path that leads you out of the forest.`,
+                 choices: []
+            },
+            meadow_entry: {
+                getText: () => `The meadow is bright and filled with colourful wildflowers. ${characterName}, you see a sparkling object glinting in the distance. Approach it or admire the flowers?`,
+                choices: [ { text: "Approach the object", nextScene: "meadow_object" }, { text: "Admire the flowers", nextScene: "meadow_flowers" } ]
+            },
+            meadow_object: {
+                getText: () => `You walk towards the sparkle and find a beautiful crystal key lying in the grass! It feels cool and smooth in your hand, ${characterName}. What will you do with it?`,
+                 choices: [ { text: "Look for a lock nearby", nextScene: "meadow_find_lock"}, { text: "Keep it as a souvenir", nextScene: "meadow_keep_key"} ]
+            },
+             meadow_find_lock: {
+                 getText: () => `Your eyes scan the meadow, ${characterName}. Partially hidden by tall grass, you spot an old, intricately carved wooden chest. The crystal key fits perfectly! Inside, you discover a rolled-up map marked with mysterious symbols. A real adventure begins!`,
+                 choices: []
+             },
+             meadow_keep_key: {
+                 getText: () => `You decide to keep the beautiful key, ${characterName}. It feels special, a reminder of this peaceful moment in the sunny meadow. You continue wandering, enjoying the day.`,
+                 choices: []
+             },
+            meadow_flowers: {
+                getText: () => `You spend a few moments enjoying the vibrant colours and sweet scent of the wildflowers, ${characterName}. A butterfly flutters past. It's a simple, happy moment. Sometimes the journey itself is the reward.`,
+                choices: []
+            }
+        };
+
+        function startGame() {
+            const name = nameInput.value.trim();
+            characterName = name ? name : "Adventurer";
+
+            mainTitle.textContent = "Your Adventure";
+            subtitle.style.display = 'none';
+
+            nameSection.classList.remove('visible-fade');
+            nameSection.classList.add('hidden-fade');
+            storySection.classList.remove('hidden-fade');
+            storySection.classList.add('visible-fade');
+
+            currentScene = 'start';
+            renderScene(currentScene);
+        }
+
+        function renderScene(sceneId) {
+            const scene = story[sceneId];
+            if (!scene) {
+                console.error("Error: Scene not found!", sceneId);
+                storyTextElement.textContent = "An error occurred in the story.";
+                choicesElement.innerHTML = '';
+                return;
+            }
+
+            const sceneText = scene.getText ? scene.getText() : (scene.text || "Missing scene text.");
+
+            storyTextElement.style.opacity = 0;
+            setTimeout(() => {
+                storyTextElement.textContent = sceneText;
+                storyTextElement.style.opacity = 1;
+            }, 500);
+
+            choicesElement.innerHTML = '';
+
+            setTimeout(() => {
+                if (!scene.choices || scene.choices.length === 0) {
+                    const endMessage = document.createElement('p');
+                    endMessage.textContent = "The End.";
+                    endMessage.className = "end-message";
+                    choicesElement.appendChild(endMessage);
+
+                    const restartButton = document.createElement('button');
+                    restartButton.textContent = "Start Over";
+                    restartButton.className = "button restart-button";
+                    restartButton.onclick = () => {
+                        mainTitle.textContent = "Welcome, Adventurer!";
+                        subtitle.style.display = 'block';
+                        storySection.classList.remove('visible-fade');
+                        storySection.classList.add('hidden-fade');
+                        nameSection.classList.remove('hidden-fade');
+                        nameSection.classList.add('visible-fade');
+                        nameInput.value = '';
+                        characterName = "Adventurer";
+                    };
+                    choicesElement.appendChild(restartButton);
+                } else {
+                    scene.choices.forEach(choice => {
+                        const button = document.createElement('button');
+                        button.textContent = choice.text;
+                        button.className = "button choice-button";
+                        button.onclick = () => {
+                            currentScene = choice.nextScene;
+                            renderScene(currentScene);
+                        };
+                        choicesElement.appendChild(button);
+                    });
+                }
+            }, 600);
+        }
+
+        startButton.addEventListener('click', startGame);
+        nameInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                startGame();
+            }
+        });
+
+    </script>
+
+</body>
+</html>
